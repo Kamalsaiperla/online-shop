@@ -1,4 +1,12 @@
-node{
+podTemplate(label: 'mypod', containers: [
+    containerTemplate(name: 'git', image: 'alpine/git', ttyEnabled: true, command: 'cat'),
+    containerTemplate(name: 'maven', image: 'maven:3.3.9-jdk-8-alpine', command: 'cat', ttyEnabled: true),
+    containerTemplate(name: 'docker', image: 'docker', command: 'cat', ttyEnabled: true)
+  ],
+  volumes: [
+    hostPathVolume(mountPath: '/var/run/docker.sock', hostPath: '/var/run/docker.sock'),
+  ] 
+  ) {node{
 
     stage('SCM Checkout')
     {
@@ -7,9 +15,12 @@ node{
     
     stage('Run Docker Compose File')
     {
+      container('docker'){
         sh 'docker-compose build'
         sh 'docker-compose up -d'
+        }
     }
+
   stage('PUSH image to Docker Hub')
     {
       /* withCredentials([string(credentialsId: 'DockerHubPassword', variable: 'DHPWD')]) 
@@ -19,12 +30,14 @@ node{
         sh 'docker push vardhanns/phpmysql_app'
         */
         //docker.withRegistry( 'https://registry.hub.docker.com', 'DockerHubPassword' ) {
-             
+        container('docker'){     
              sh 'sudo docker login -u "pkamalsai" -p "k@malkee3014" docker.io'
              //sh 'sudo docker push upasanatestdocker/mysql'
              //sh 'sudo docker push upasanatestdocker/job1_web1.0'
              sh 'sudo docker push pkamlsai/job1_web2.0'
             // sh 'docker push upasanatestdocker/mysql'
-          
+          }
+      }
     }
+}
 }
